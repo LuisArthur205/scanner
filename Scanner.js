@@ -1,23 +1,30 @@
-// Configuração do Scanner
-const SCANNER = new Html5QrcodeScanner("leitor", {
-    fps: 10,
-    qrbox: { width: 250, height: 250 },
-    // A propriedade abaixo ajuda a manter a preferência, mas o render é quem manda
-    rememberLastUsedCamera: true, 
-    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
-});
+// 1. Inicializa o objeto apenas apontando para o ID da sua div
+const html5QrCode = new Html5Qrcode("leitor");
 
+const config = { 
+    fps: 10, 
+    qrbox: { width: 250, height: 250 } 
+};
+
+// Função de sucesso
 function teveSucesso(resultado) {
     document.getElementById('resultado').innerHTML = `Resultado: ${resultado}`;
-    // Para parar de escanear após o sucesso
-    SCANNER.clear();
+    // Opcional: Para o scanner após ler um código
+    html5QrCode.stop();
 }
 
-function exibirMensagemDeErro(erro) {
-    // Erros de permissão ou câmera não encontrada aparecem aqui
-    console.warn(`Erro na leitura: ${erro}`);
+// 2. Função que força a abertura da câmera
+function iniciarScannerAutomatico() {
+    // 'environment' tenta abrir a câmera traseira diretamente
+    html5QrCode.start(
+        { facingMode: "environment" }, 
+        config, 
+        teveSucesso
+    ).catch(err => {
+        // Trata erro caso a permissão seja negada globalmente no navegador
+        console.error("Erro ao iniciar automaticamente: ", err);
+    });
 }
 
-// O segredo está no facingMode: "environment" (câmera traseira)
-// Nota: O Html5QrcodeScanner as vezes ignora o facingMode se houver câmera salva no cache.
-SCANNER.render(teveSucesso, exibirMensagemDeErro);
+// 3. Dispara assim que a página carregar
+window.addEventListener('DOMContentLoaded', iniciarScannerAutomatico);
